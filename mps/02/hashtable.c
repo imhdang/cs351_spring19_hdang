@@ -117,13 +117,15 @@ void  ht_rehash(hashtable_t *ht, unsigned long newsize) {
   bucket_t **oldbuckets = ht->buckets;
   ht->buckets = calloc(sizeof(bucket_t *), newsize);
   ht->size = newsize;
+  bucket_t *bucket_to_free;
   for (unsigned long i=0; i<oldsize; i++) {
     bucket_t *b = oldbuckets[i];
     while (b) {
       ht_put(ht, b->key, b->val);
+      bucket_to_free = b;
       b = b->next;
+      free(bucket_to_free);
     }
-    free(oldbuckets[i]);
   }
   free(oldbuckets);
 }
