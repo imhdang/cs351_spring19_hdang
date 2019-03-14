@@ -165,19 +165,53 @@ void eval(char *cmdline)
 {
   /* the following code demonstrates how to use parseline --- you'll 
    * want to replace most of it (at least the print statements). */
-  int i, bg;
+  int bg;
+  pid_t pid;
+  sigset_t sigmask;
   char *argv[MAXARGS];
 
   bg = parseline(cmdline, argv);
-  if (bg) {
-    printf("background job requested\n");
-  }
-  for (i=0; argv[i] != NULL; i++) {
-    printf("argv[%d]=%s%s", i, argv[i], (argv[i+1]==NULL)?"\n":", ");
-  }
+  // if (bg)
+  // {
+  //   printf("background job requested\n");
+  // }
+  // for (i=0; argv[i] != NULL; i++)
+  // {
+  //   printf("argv[%d]=%s%s", i, argv[i], (argv[i+1]==NULL)?"\n":", ");
+  // }
 
-  if (builtin_cmd(argv))
+  sigemptyset(&sigmask);
+  sigaddset(&sigmask, SIGINT);
+  sigaddset(&sigmask, SIGTSTP);
+  sigaddset(&sigmask, SIGCHLD);
+  sigprocmask(SIG_BLOCK, &sigmask, NULL);
+
+  if (builtin_cmd(argv) == 0)
   {
+    if ((pid = fork()) == 0)
+    {
+      setpgid(0, 0);
+      sigprocmask(SIG_UNBLOCK, &sigmask, NULL);
+
+      if (execvp(argv[0], argv) < 0)
+      {
+        printf("%s: Command not found.\n", argv[0]);
+        exit(0);
+      }
+    }
+
+    if (bg == 0)
+    {
+      addjob(jobs, pid, FG, cmdline);
+      sigprocmask(SIG_UNBLOCK, &sigmask, NULL);
+      waitfg(pid);
+    }
+    else
+    {
+      addjob(jobs, pid, BG, cmdline);
+      sigprocmask(SIG_UNBLOCK, &sigmask, NULL);
+      printf("[%d] (%d) %s", pid2jid(pid), pid, cmdline);
+    }
   }
   return;
 }
@@ -534,6 +568,3 @@ void sigquit_handler(int sig)
   printf("Terminating after receipt of SIGQUIT signal\n");
   exit(1);
 }
-
-
-
