@@ -184,10 +184,10 @@ void eval(char *cmdline)
   sigaddset(&sigmask, SIGINT);
   sigaddset(&sigmask, SIGTSTP);
   sigaddset(&sigmask, SIGCHLD);
-  sigprocmask(SIG_BLOCK, &sigmask, NULL);
 
   if (builtin_cmd(argv) == 0)
   {
+    sigprocmask(SIG_BLOCK, &sigmask, NULL);
     if ((pid = fork()) == 0)
     {
       setpgid(0, 0);
@@ -283,7 +283,7 @@ int builtin_cmd(char **argv)
     return 1;
   else if (strcmp(argv[0], "quit") == 0)
   {
-    exit(0);
+	  exit(0);
   }
   else if (strcmp(argv[0], "jobs") == 0)
   {
@@ -303,7 +303,61 @@ int builtin_cmd(char **argv)
  */
 void do_bgfg(char **argv) 
 {
-  return;
+  struct job_t *job;
+  int jid;
+  pid_t pid;
+
+  if (argv[1] == NULL)
+  {
+    printf("%s command requires PID or %%jobid argument\n", argv[0]);
+    return;
+  }
+
+  if (sscanf(argv[1], "%%%d", &jid))
+  {
+    if ((job = getjobjid(jobs, jid)) == NULL)
+    {
+      printf("%s: No such job\n", argv[1]);
+      return;
+    }
+  }
+  else if (sscanf(argv[1], "%d", &pid))
+  {
+    if ((job = getjobpid(jobs, pid)) == NULL)
+    {
+      printf("(%d): No such process\n", pid);
+      return;
+    }
+  }
+  else
+  {
+    printf("%s: argument must be a PID or %%jobid\n", argv[0]);
+    return;
+  }
+  
+  if (strcmp(argv[0], "bg") == 0)
+  {
+    job->state = BG;
+    printf("[%d] (%d) %s", job->jid, job->pid, job->cmdline);
+    kill(-(job->pid), SIGCONT);
+    return;
+  }
+  else if (strcmp(argv[0], "fg") == 0)
+  {
+    if (job->state == BG)
+    {
+      job->state = ST;
+      kill(-(job->pid), SIGTSTP);
+      return;
+    }
+    else
+    {
+      job->state = FG;
+      kill(-(job->pid), SIGCONT);
+      waitfg(job->pid);
+      return;
+    }
+  }
 }
 
 /* 
@@ -311,8 +365,7 @@ void do_bgfg(char **argv)
  */
 void waitfg(pid_t pid)
 {
-  struct job_t *job = getjobpid(jobs, pid);
-  while (job && job->state == FG) {
+  while (pid == fgpid(jobs)) {
     pause();
   }
 }
