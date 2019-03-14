@@ -311,7 +311,10 @@ void do_bgfg(char **argv)
  */
 void waitfg(pid_t pid)
 {
-  return;
+  struct job_t *job = getjobpid(jobs, pid);
+  while (job && job->state == FG) {
+    pause();
+  }
 }
 
 /*****************
@@ -327,6 +330,28 @@ void waitfg(pid_t pid)
  */
 void sigchld_handler(int sig) 
 {
+  pid_t pid;
+  int stat;
+  struct job_t *job;
+
+  while ((pid = waitpid(-1, &stat, WUNTRACED|WNOHANG)) > 0)
+  {
+    job = getjobpid(jobs, pid);
+
+    if (WIFSIGNALED(stat))
+    {
+      if (WTERMSIG(stat) == SIGINT)
+      {
+        printf("Job [%d] (%d) terminated by signal %d\n", pid2jid(pid), pid, WTERMSIG(stat));
+      }
+    }
+    else if (WIFSTOPPED(stat))
+    {
+      job->state = ST;
+      printf("Job [%d] (%d) stopped by signal %d\n", pid2jid(pid), pid, WSTOPSIG(stat));
+    }
+    deletejob(jobs, pid);
+  }
   return;
 }
 
