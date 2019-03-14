@@ -349,6 +349,7 @@ void sigchld_handler(int sig)
     {
       job->state = ST;
       printf("Job [%d] (%d) stopped by signal %d\n", pid2jid(pid), pid, WSTOPSIG(stat));
+      continue;
     }
     deletejob(jobs, pid);
   }
@@ -362,6 +363,11 @@ void sigchld_handler(int sig)
  */
 void sigint_handler(int sig) 
 {
+  int pid = fgpid(jobs);
+  if (pid)
+  {
+    kill(-pid, sig);
+  }
   return;
 }
 
@@ -372,6 +378,11 @@ void sigint_handler(int sig)
  */
 void sigtstp_handler(int sig) 
 {
+  int pid = fgpid(jobs);
+  if (pid)
+  {
+    kill(-pid, sig);
+  }
   return;
 }
 
