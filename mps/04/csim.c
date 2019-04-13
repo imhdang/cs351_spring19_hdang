@@ -7,10 +7,27 @@
 
 #define MAXLEN 256
 
+typedef struct {
+    int hits;
+    int misses;
+    int evictions;
+} summary_t;
+
+typedef struct {
+    int valid;
+    int tag;
+    int age;
+} line_t;
+
+typedef line_t* set_t;
+typedef set_t* cache_t;
+
 void printUsage();
 void parseArg(int argc, char* argv[], char* tracefile);
 
 int v = 0, s = 0, E = 0, b = 0;
+cache_t cache;
+summary_t summary = {0, 0, 0};
 
 int main(int argc, char* argv[])
 {
