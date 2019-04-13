@@ -26,6 +26,7 @@ void printUsage();
 void parseArg(int argc, char* argv[], char* tracefile);
 void initCache();
 void freeCache();
+void simulateCache(unsigned long long address);
 
 int v = 0, s = 0, E = 0, b = 0;
 cache_t cache;
@@ -37,6 +38,31 @@ int main(int argc, char* argv[])
     parseArg(argc, argv, tracefile);
     initCache();
 
+    FILE* file = fopen(tracefile, "r");
+    char op;
+    unsigned long long address;
+    int size;
+
+    while (fscanf(file, "%c %llx,%d\n", &op, &address, &size) != EOF)
+    {
+        switch(op)
+        {
+            case 'L':
+                simulateCache(address);
+                break;
+            case 'S':
+                simulateCache(address);
+                break;
+            case 'M':
+                simulateCache(address);
+                simulateCache(address);
+                break;
+            default:
+                break;
+        }
+    }
+
+    fclose(file);
     freeCache();
     printSummary(summary.hits, summary.misses, summary.evictions);
     return 0;
@@ -68,6 +94,11 @@ void freeCache()
         free(cache[i]);
     }
     free(cache);
+}
+
+void simulateCache(unsigned long long address)
+{
+
 }
 
 void parseArg(int argc, char* argv[], char* tracefile)
