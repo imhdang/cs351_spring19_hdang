@@ -24,6 +24,8 @@ typedef set_t* cache_t;
 
 void printUsage();
 void parseArg(int argc, char* argv[], char* tracefile);
+void initCache();
+void freeCache();
 
 int v = 0, s = 0, E = 0, b = 0;
 cache_t cache;
@@ -33,8 +35,39 @@ int main(int argc, char* argv[])
 {
     char tracefile[MAXLEN];
     parseArg(argc, argv, tracefile);
-    printSummary(0, 0, 0);
+    initCache();
+
+    freeCache();
+    printSummary(summary.hits, summary.misses, summary.evictions);
     return 0;
+}
+
+void initCache()
+{
+    int set_num = 1 << s;
+    int line_num = E;
+    cache = malloc(sizeof(set_t) * set_num);
+
+    for (int i = 0; i < set_num; ++i)
+    {
+        cache[i] = malloc(sizeof(line_t) * line_num);
+        for (int j = 0; j < line_num; ++j)
+        {
+            cache[i][j].valid = 0;
+            cache[i][j].tag = -1;
+            cache[i][j].age = 0;
+        }
+    }
+}
+
+void freeCache()
+{
+    int set_num = 1 << s;
+    for (int i = 0; i < set_num; ++i)
+    {
+        free(cache[i]);
+    }
+    free(cache);
 }
 
 void parseArg(int argc, char* argv[], char* tracefile)
