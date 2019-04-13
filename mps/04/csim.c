@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
     }
 
     fclose(file);
-    free(cache);
+    freeCache();
     printSummary(summary.hits, summary.misses, summary.evictions);
     return 0;
 }
