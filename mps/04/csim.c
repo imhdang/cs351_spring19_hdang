@@ -48,14 +48,23 @@ int main(int argc, char* argv[])
         switch(op)
         {
             case 'L':
+                if (v)
+                    printf("L %llx, %d ", address, size);
                 simulateCache(address);
+                printf("\n");
                 break;
             case 'S':
+                if (v)
+                    printf("S %llx, %d ", address, size);
                 simulateCache(address);
+                printf("\n");
                 break;
             case 'M':
+                if (v)
+                    printf("M %llx, %d ", address, size);
                 simulateCache(address);
                 simulateCache(address);
+                printf("\n");
                 break;
             default:
                 break;
@@ -63,7 +72,7 @@ int main(int argc, char* argv[])
     }
 
     fclose(file);
-    freeCache();
+    free(cache);
     printSummary(summary.hits, summary.misses, summary.evictions);
     return 0;
 }
@@ -98,7 +107,61 @@ void freeCache()
 
 void simulateCache(unsigned long long address)
 {
+    unsigned long long set_idx = (address << (64 - s - b)) >> (64 - s);
+    unsigned long long tag = address >> (s + b);
+    set_t set = cache[set_idx];
 
+    for (int i = 0; i < E; i++)
+    {
+        if (set[i].valid == 1)
+        {
+            set[i].age++;
+        }
+    }
+
+    // HIT CASE
+    for (int i = 0; i < E; i++)
+    {
+        if (set[i].tag == tag && set[i].valid == 1)
+        {
+            set[i].age = 0;
+            summary.hits++;
+            printf("hit ");
+            return;
+        }
+    }
+
+    // MISS CASE
+    summary.misses++;
+    printf("miss ");
+
+    for (int i = 0; i < E; i++) 
+    {
+        if (set[i].valid == 0) 
+        {
+            set[i].tag = tag;
+            set[i].valid = 1;
+            set[i].age = 0;
+            return;
+        }
+    }
+
+    // EVICTION CASE
+    int max_idx = 0;
+    int max_age = set[0].age;
+    for (int i = 0; i < E; i++)
+    {
+        if (set[i].age > max_age)
+        {
+            max_idx = i;
+            max_age = set[i].age;
+        }
+    }
+
+    set[max_idx].age = 0;
+    set[max_idx].tag = tag;
+    summary.evictions++;
+    printf("eviction ");
 }
 
 void parseArg(int argc, char* argv[], char* tracefile)
