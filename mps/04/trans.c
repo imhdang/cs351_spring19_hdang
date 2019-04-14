@@ -12,6 +12,75 @@
 
 int is_transpose(int M, int N, int A[N][M], int B[M][N]);
 
+void transpose8(int M, int N, int A[N][M], int B[M][N])
+{
+    int t0, t1, t2, t3, t4, t5, t6, t7;
+    for (int n = 0; n < N; n += 8)
+    {
+        for (int m = 0; m < M; m += 8)
+        {
+            for (int i = n; i < n + 8; i++)
+            {
+                t0 = A[i][m];
+                t1 = A[i][m + 1];
+                t2 = A[i][m + 2];
+                t3 = A[i][m + 3];
+                t4 = A[i][m + 4];
+                t5 = A[i][m + 5];
+                t6 = A[i][m + 6];
+                t7 = A[i][m + 7];
+                B[m][i] = t0;
+                B[m + 1][i] = t1;
+                B[m + 2][i] = t2;
+                B[m + 3][i] = t3;
+                B[m + 4][i] = t4;
+                B[m + 5][i] = t5;
+                B[m + 6][i] = t6;
+                B[m + 7][i] = t7;
+            }
+        }
+    }
+}
+
+void transpose4(int M, int N, int A[N][M], int B[M][N])
+{
+    int t0, t1, t2, t3;
+    for (int n = 0; n < N; n += 4)
+    {
+        for (int m = 0; m < M; m += 4)
+        {
+            for (int i = n; i < n + 4; i++)
+            {
+                t0 = A[i][m];
+                t1 = A[i][m + 1];
+                t2 = A[i][m + 2];
+                t3 = A[i][m + 3];
+                B[m][i] = t0;
+                B[m + 1][i] = t1;
+                B[m + 2][i] = t2;
+                B[m + 3][i] = t3;
+            }
+        }
+    }
+}
+
+void transpose16(int M, int N, int A[N][M], int B[M][N])
+{
+    for (int n = 0; n < N; n += 16)
+    {
+        for (int m = 0; m < M; m += 16)
+        {
+            for (int i = n; i < n + 16; i++)
+            {
+                for (int j = m; j < m + 16; m++)
+                    B[j][i] = A[i][j];
+            }
+        }
+    }
+}
+
+
+
 /* 
  * transpose_submit - This is the solution transpose function that you
  *     will be graded on for Part B of the assignment. Do not change
@@ -22,6 +91,18 @@ int is_transpose(int M, int N, int A[N][M], int B[M][N]);
 char transpose_submit_desc[] = "Transpose submission";
 void transpose_submit(int M, int N, int A[N][M], int B[M][N])
 {
+    switch (M)
+    {
+        case 32:
+            transpose8(M, N, A, B);
+            break;
+        case 64:
+            transpose4(M, N, A, B);
+            break;
+        case 61:
+            transpose16(M, N, A, B);
+            break;
+    }
 }
 
 /* 
@@ -81,4 +162,5 @@ int is_transpose(int M, int N, int A[N][M], int B[M][N])
     }
     return 1;
 }
+
 
