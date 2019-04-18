@@ -19,7 +19,7 @@ void transpose8(int M, int N, int A[N][M], int B[M][N])
     {
         for (int m = 0; m < M; m += 8)
         {
-            for (int i = n; i < n + 8; i++)
+            for (int i = n; i < n + 8 && i < N; i++)
             {
                 t0 = A[i][m];
                 t1 = A[i][m + 1];
@@ -49,7 +49,7 @@ void transpose4(int M, int N, int A[N][M], int B[M][N])
     {
         for (int m = 0; m < M; m += 4)
         {
-            for (int i = n; i < n + 4; i++)
+            for (int i = n; i < n + 4 && i < N; i++)
             {
                 t0 = A[i][m];
                 t1 = A[i][m + 1];
@@ -70,16 +70,14 @@ void transpose16(int M, int N, int A[N][M], int B[M][N])
     {
         for (int m = 0; m < M; m += 16)
         {
-            for (int i = n; i < n + 16; i++)
+            for (int i = n; i < n + 16 && i < N; i++)
             {
-                for (int j = m; j < m + 16; m++)
+                for (int j = m; j < m + 16 && j < M; j++)
                     B[j][i] = A[i][j];
             }
         }
     }
 }
-
-
 
 /* 
  * transpose_submit - This is the solution transpose function that you
